@@ -316,7 +316,7 @@ GLuint ozone_egl_loadShader ( GLenum type, const char *shaderSrc )
          glGetShaderInfoLog ( shader, infoLen, NULL, infoLog );
          printf ( "Error compiling shader:%s\n", infoLog );            
          
-         delete infoLog;
+         delete[] infoLog;
       }
 
       glDeleteShader ( shader );
@@ -374,7 +374,7 @@ GLuint ozone_egl_loadProgram ( const char *vertShaderSrc, const char *fragShader
          glGetProgramInfoLog ( programObject, infoLen, NULL, infoLog );
          printf ( "Error linking program:%s\n", infoLog );            
          
-         delete infoLog;
+         delete[] infoLog;
       }
 
       glDeleteProgram ( programObject );
