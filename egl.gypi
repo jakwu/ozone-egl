@@ -18,6 +18,8 @@
       'type': 'static_library',
       'defines': [
         'OZONE_IMPLEMENTATION',
+        'LINUX',
+        'EGL_API_FB'
       ],
       'dependencies': [
         '../base/base.gyp:base',
