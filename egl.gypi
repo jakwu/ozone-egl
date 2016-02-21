@@ -20,10 +20,10 @@
         'OZONE_IMPLEMENTATION',
       ],
       'dependencies': [
-        '../../base/base.gyp:base',
-        '../events/events.gyp:events',
-        '../events/ozone/events_ozone.gyp:events_ozone_evdev',
-        '../gfx/gfx.gyp:gfx',
+        '../base/base.gyp:base',
+        '../ui/events/events.gyp:events',
+        '../ui/events/ozone/events_ozone.gyp:events_ozone_evdev',
+        '../ui/gfx/gfx.gyp:gfx',
       ],
       'sources': [
         'client_native_pixmap_factory_egl.cc',

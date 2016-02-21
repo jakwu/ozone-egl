@@ -1,4 +1,4 @@
-#include "ui/ozone/platform/egl/egl_window.h"
+#include "egl_window.h"
 
 #include "base/bind.h"
 #include "ui/events/devices/device_data_manager.h"
@@ -26,6 +26,10 @@ namespace ui {
  
  eglWindow::~eglWindow() {
    ui::PlatformEventSource::GetInstance()->RemovePlatformEventDispatcher(this);
+ }
+
+ PlatformImeController* eglWindow::GetPlatformImeController() {
+   return nullptr;
  }
 
  void eglWindow::Initialize() {

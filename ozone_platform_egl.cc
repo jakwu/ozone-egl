@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "ui/ozone/platform/egl/ozone_platform_egl.h"
-#include "ui/ozone/platform/egl/egl_surface_factory.h"
+#include "ozone_platform_egl.h"
+#include "egl_surface_factory.h"
 
 #include "ui/ozone/common/native_display_delegate_ozone.h"
 #include "ui/ozone/common/stub_overlay_manager.h"
