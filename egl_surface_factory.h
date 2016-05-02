@@ -7,7 +7,6 @@
 
 #include "base/memory/scoped_ptr.h"
 #include "ui/ozone/public/surface_factory_ozone.h"
-#include "ui/ozone/platform/egl/egl_window.h"
 
 
 namespace gfx {
@@ -27,7 +26,6 @@ class SurfaceFactoryEgl : public ui::SurfaceFactoryOzone {
 
   // SurfaceFactoryOzone:
   intptr_t GetNativeDisplay() override;
-  //virtual gfx::AcceleratedWidget GetAcceleratedWidget() override;
   scoped_ptr<ui::SurfaceOzoneEGL> CreateEGLSurfaceForWidget(
       gfx::AcceleratedWidget widget) override;
   const int32* GetEGLSurfaceProperties(

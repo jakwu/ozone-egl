@@ -1,7 +1,7 @@
 // Copyright 2014 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
-#include "ui/ozone/platform/egl/egl_surface_factory.h"
+#include "egl_surface_factory.h"
 #include "third_party/skia/include/core/SkBitmap.h"
 #include "third_party/skia/include/core/SkCanvas.h"
 #include "third_party/skia/include/core/SkSurface.h"
@@ -11,7 +11,7 @@
 #include "ui/gfx/skia_util.h"
 #include "ui/gfx/vsync_provider.h"
 #include "base/logging.h"
-#include "ui/ozone/common/egl_util.h"
+#include "base/files/file_path.h"
 
 #include "egl_wrapper.h"
 
@@ -27,6 +27,9 @@
 #define OZONE_EGL_WINDOW_WIDTH 1024
 #define OZONE_EGL_WINDOW_HEIGTH 768
 
+const char kDefaultEglSoname[] = "libEGL.so.1";
+const char kDefaultGlesSoname[] = "libGLESv2.so.2";
+
 namespace ui {
 
 class EglOzoneCanvas: public ui::SurfaceOzoneCanvas {
@@ -34,16 +37,15 @@ class EglOzoneCanvas: public ui::SurfaceOzoneCanvas {
   EglOzoneCanvas();
   ~EglOzoneCanvas() override  ;
   // SurfaceOzoneCanvas overrides:
+  virtual skia::RefPtr<SkCanvas> GetCanvas() override {
+    return skia::SharePtr<SkCanvas>(surface_->getCanvas());
+  }
   void ResizeCanvas(const gfx::Size& viewport_size) override;
-  //virtual skia::RefPtr<SkCanvas> GetCanvas() override {
-  //  return skia::SharePtr<SkCanvas>(surface_->getCanvas());
-  //}
   void PresentCanvas(const gfx::Rect& damage) override;
   
   scoped_ptr<gfx::VSyncProvider> CreateVSyncProvider() override {
     return scoped_ptr<gfx::VSyncProvider>();
   }
-  skia::RefPtr<SkSurface> GetSurface() override { return surface_; }
 
  private: 
   skia::RefPtr<SkSurface> surface_;
@@ -109,11 +111,6 @@ class OzoneEgl : public ui::SurfaceOzoneEGL {
     return true;
   }
 
-  bool OnSwapBuffersAsync(const SwapCompletionCallback& callback) override
-  { 
-    return true; 
-  }
-
   bool ResizeNativeWindow(const gfx::Size& viewport_size) override {
     return true;
   }
@@ -153,17 +150,17 @@ bool SurfaceFactoryEgl::CreateSingleWindow()
   }
 
   if (ioctl(fb_fd, FBIOGET_VSCREENINFO, &fb_var)) {
-        LOG(FATAL) << "failed to get fb var info errno: " << errno;
-        g_width = 640;
-	g_height = 480;
+    LOG(FATAL) << "failed to get fb var info errno: " << errno;
+    g_width = 640;
+    g_height = 480;
   } else {
     g_width = fb_var.xres;
     g_height = fb_var.yres;
   }
 
- close(fb_fd);
+  close(fb_fd);
 
- if(!ozone_egl_setup(0, 0, g_width, g_height))
+  if(!ozone_egl_setup(0, 0, g_width, g_height))
   {
       LOG(FATAL) << "CreateSingleWindow";
       return false;
@@ -185,12 +182,6 @@ intptr_t SurfaceFactoryEgl::GetNativeWindow(){
   return (intptr_t)ozone_egl_GetNativeWin();
 }
 
-//gfx::AcceleratedWidget SurfaceFactoryEgl::GetAcceleratedWidget() {
-//  if (!CreateSingleWindow())
-//    LOG(FATAL) << "failed to create window";
-//  return (gfx::AcceleratedWidget)GetNativeDisplay();
-//}
-
 scoped_ptr<ui::SurfaceOzoneEGL>
 SurfaceFactoryEgl::CreateEGLSurfaceForWidget(
     gfx::AcceleratedWidget widget) {
@@ -201,8 +192,40 @@ SurfaceFactoryEgl::CreateEGLSurfaceForWidget(
 bool SurfaceFactoryEgl::LoadEGLGLES2Bindings(
     AddGLLibraryCallback add_gl_library,
     SetGLGetProcAddressProcCallback set_gl_get_proc_address) { 
-  return LoadDefaultEGLGLES2Bindings(add_gl_library, set_gl_get_proc_address);
-  //return false;
+  const char* egl_soname = kDefaultEglSoname;
+  const char* gles_soname = kDefaultGlesSoname;
+
+  base::NativeLibraryLoadError error;
+  base::NativeLibrary egl_library =
+      base::LoadNativeLibrary(base::FilePath(egl_soname), &error);
+  if (!egl_library) {
+    LOG(WARNING) << "Failed to load EGL library: " << error.ToString();
+    return false;
+  }
+
+  base::NativeLibrary gles_library =
+      base::LoadNativeLibrary(base::FilePath(gles_soname), &error);
+  if (!gles_library) {
+    LOG(WARNING) << "Failed to load GLES library: " << error.ToString();
+    base::UnloadNativeLibrary(egl_library);
+    return false;
+  }
+
+  GLGetProcAddressProc get_proc_address =
+      reinterpret_cast<GLGetProcAddressProc>(
+          base::GetFunctionPointerFromNativeLibrary(egl_library,
+                                                    "eglGetProcAddress"));
+  if (!get_proc_address) {
+    LOG(ERROR) << "eglGetProcAddress not found.";
+    base::UnloadNativeLibrary(egl_library);
+    base::UnloadNativeLibrary(gles_library);
+    return false;
+  }
+
+  set_gl_get_proc_address.Run(get_proc_address);
+  add_gl_library.Run(egl_library);
+  add_gl_library.Run(gles_library);
+  return true;
 }
 
 const int32* SurfaceFactoryEgl::GetEGLSurfaceProperties(

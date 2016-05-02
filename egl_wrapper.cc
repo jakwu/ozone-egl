@@ -132,6 +132,7 @@ EGLint ozone_egl_setup(EGLint x, EGLint y, EGLint width, EGLint height )
 #endif
 
     g_EglDisplay = eglGetDisplay(g_NativeDisplay);
+
     if (g_EglDisplay == EGL_NO_DISPLAY)
     {
         LOG(ERROR) << "eglGetDisplay returned EGL_NO_DISPLAY";
@@ -316,7 +317,7 @@ GLuint ozone_egl_loadShader ( GLenum type, const char *shaderSrc )
          glGetShaderInfoLog ( shader, infoLen, NULL, infoLog );
          printf ( "Error compiling shader:%s\n", infoLog );            
          
-         delete infoLog;
+         delete[] infoLog;
       }
 
       glDeleteShader ( shader );
@@ -374,7 +375,7 @@ GLuint ozone_egl_loadProgram ( const char *vertShaderSrc, const char *fragShader
          glGetProgramInfoLog ( programObject, infoLen, NULL, infoLog );
          printf ( "Error linking program:%s\n", infoLog );            
          
-         delete infoLog;
+         delete[] infoLog;
       }
 
       glDeleteProgram ( programObject );

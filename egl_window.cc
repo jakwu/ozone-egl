@@ -1,14 +1,8 @@
-#include "ui/ozone/platform/egl/egl_window.h"
-
+#include "egl_window.h"
+#include "egl_surface_factory.h"
 #include "base/bind.h"
-#include "ui/events/devices/device_data_manager.h"
-#include "ui/events/event.h"
-#include "ui/events/ozone/evdev/event_factory_evdev.h"
 #include "ui/events/ozone/events_ozone.h"
-#include "ui/events/platform/platform_event_source.h"
-#include "ui/gfx/display.h"
-#include "ui/ozone/common/gpu/ozone_gpu_messages.h"
-#include "ui/platform_window/platform_window_delegate.h"
+
 
 namespace ui {
 
@@ -17,20 +11,16 @@ namespace ui {
          EventFactoryEvdev* event_factory,
          const gfx::Rect& bounds)
      : delegate_(delegate),
+       surface_factory_(surface_factory),
        event_factory_(event_factory),
-       bounds_(bounds),
-       surface_factory_(surface_factory) {
+       bounds_(bounds) {
    surface_factory_->CreateSingleWindow();
    window_id_=surface_factory_->GetNativeWindow();
+   delegate_->OnAcceleratedWidgetAvailable(window_id_);
+   PlatformEventSource::GetInstance()->AddPlatformEventDispatcher(this);
  }
  
  eglWindow::~eglWindow() {
-   ui::PlatformEventSource::GetInstance()->RemovePlatformEventDispatcher(this);
- }
-
- void eglWindow::Initialize() {
-   PlatformEventSource::GetInstance()->AddPlatformEventDispatcher(this);
-   delegate_->OnAcceleratedWidgetAvailable(window_id_, 1.f);
  }
  
  gfx::Rect eglWindow::GetBounds() {
@@ -75,25 +65,17 @@ namespace ui {
  void eglWindow::MoveCursorTo(const gfx::Point& location) {
    event_factory_->WarpCursorTo(window_id_, location);
  }
- 
- void eglWindow::ConfineCursorToBounds(const gfx::Rect& bounds) {
+
+ bool eglWindow::CanDispatchEvent(const PlatformEvent& ne) {
+   return true;
  }
- 
-bool eglWindow::CanDispatchEvent(const PlatformEvent& ne) {
-  return true;
-}
 
-uint32_t eglWindow::DispatchEvent(const PlatformEvent& native_event) {
-  DCHECK(native_event);
- // Event* event = static_cast<Event*>(native_event);
- // if (event->IsTouchEvent())
-//    ScaleTouchEvent(static_cast<TouchEvent*>(event), bounds_.size());
-
-  DispatchEventFromNativeUiEvent(
-      native_event, base::Bind(&PlatformWindowDelegate::DispatchEvent,
+ uint32_t eglWindow::DispatchEvent(const PlatformEvent& native_event) {
+   DispatchEventFromNativeUiEvent(
+       native_event, base::Bind(&PlatformWindowDelegate::DispatchEvent,
                                base::Unretained(delegate_)));
 
-  return POST_DISPATCH_STOP_PROPAGATION;
-}
+   return POST_DISPATCH_STOP_PROPAGATION;
+ }
  
 }
