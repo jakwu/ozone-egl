@@ -17,12 +17,14 @@
       'type': 'static_library',
       'defines': [
         'OZONE_IMPLEMENTATION',
+        'LINUX',
+        'EGL_API_FB'
       ],
       'dependencies': [
-        '../../base/base.gyp:base',
-        '../events/events.gyp:events',
-        '../events/ozone/events_ozone.gyp:events_ozone_evdev',
-        '../gfx/gfx.gyp:gfx',
+        '<(DEPTH)/base/base.gyp:base',
+        '<(DEPTH)/ui/events/events.gyp:events',
+        '<(DEPTH)/ui/events/ozone/events_ozone.gyp:events_ozone_evdev',
+        '<(DEPTH)/ui/gfx/gfx.gyp:gfx',
       ],
       'sources': [
         'ozone_platform_egl.cc',

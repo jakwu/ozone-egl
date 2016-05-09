@@ -1,7 +1,7 @@
 // Copyright 2014 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
-#include "ui/ozone/platform/egl/egl_surface_factory.h"
+#include "egl_surface_factory.h"
 #include "third_party/skia/include/core/SkBitmap.h"
 #include "third_party/skia/include/core/SkCanvas.h"
 #include "third_party/skia/include/core/SkSurface.h"
@@ -153,17 +153,17 @@ bool SurfaceFactoryEgl::CreateSingleWindow()
   }
 
   if (ioctl(fb_fd, FBIOGET_VSCREENINFO, &fb_var)) {
-        LOG(FATAL) << "failed to get fb var info errno: " << errno;
-        g_width = 640;
-	g_height = 480;
+    LOG(FATAL) << "failed to get fb var info errno: " << errno;
+    g_width = 640;
+    g_height = 480;
   } else {
     g_width = fb_var.xres;
     g_height = fb_var.yres;
   }
 
- close(fb_fd);
+  close(fb_fd);
 
- if(!ozone_egl_setup(0, 0, g_width, g_height))
+  if(!ozone_egl_setup(0, 0, g_width, g_height))
   {
       LOG(FATAL) << "CreateSingleWindow";
       return false;

@@ -4,7 +4,7 @@
 
 #include "ui/platform_window/platform_window.h"
 #include "ui/platform_window/platform_window_delegate.h"
-#include "ui/ozone/platform/egl/egl_surface_factory.h"
+#include "egl_surface_factory.h"
 
 namespace ui {
 class SurfaceFactoryEgl;

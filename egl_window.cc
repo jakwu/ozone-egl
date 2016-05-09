@@ -1,4 +1,4 @@
-#include "ui/ozone/platform/egl/egl_window.h"
+#include "egl_window.h"
 
 namespace ui {
 
