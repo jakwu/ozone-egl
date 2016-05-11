@@ -1,37 +1,29 @@
 #include "egl_window.h"
+#include "egl_surface_factory.h"
+
+#include "ui/events/ozone/events_ozone.h"
+
 
 namespace ui {
 
-/*
- eglWindow::eglWindow(PlatformWindowDelegate* delegate,
-                              LibeglplatformShimLoader* eglplatform_shim,
-                              EventFactoryEvdev* event_factory,
-                              const gfx::Rect& bounds)
-     : delegate_(delegate),
-       eglplatform_shim_(eglplatform_shim),
-       event_factory_(event_factory),
-       bounds_(bounds),
-       window_id_(SHIM_NO_WINDOW_ID) {
-   window_id_ = eglplatform_shim_->ShimCreateWindow();
-   delegate_->OnAcceleratedWidgetAvailable(window_id_);
-   ui::PlatformEventSource::GetInstance()->AddPlatformEventDispatcher(this);
- }
-*/
 
- eglWindow::eglWindow(PlatformWindowDelegate* delegate,SurfaceFactoryEgl* surface_factory,const gfx::Rect& bounds)
+ eglWindow::eglWindow(PlatformWindowDelegate* delegate,
+                      SurfaceFactoryEgl* surface_factory,
+                      EventFactoryEvdev* event_factory,
+                      const gfx::Rect& bounds)
      : delegate_(delegate),
        surface_factory_(surface_factory),
+       event_factory_(event_factory),
        bounds_(bounds) {
    LOG(ERROR) << "-eglWindow::eglWindow-";
    surface_factory_->CreateSingleWindow();
-   window_id_=surface_factory_->GetNativeWindow();
+   window_id_ = surface_factory_->GetNativeWindow();
    delegate_->OnAcceleratedWidgetAvailable(window_id_);
+   ui::PlatformEventSource::GetInstance()->AddPlatformEventDispatcher(this);
  }
  
  eglWindow::~eglWindow() {
-   //ui::PlatformEventSource::GetInstance()->RemovePlatformEventDispatcher(this);
-   //if (window_id_ != SHIM_NO_WINDOW_ID)
-   //  eglplatform_shim_->ShimDestroyWindow(window_id_);
+   ui::PlatformEventSource::GetInstance()->RemovePlatformEventDispatcher(this);
  }
  
  gfx::Rect eglWindow::GetBounds() {
@@ -76,27 +68,28 @@ namespace ui {
  }
  
  void eglWindow::MoveCursorTo(const gfx::Point& location) {
-//   event_factory_->WarpCursorTo(window_id_, location);
+   event_factory_->WarpCursorTo(window_id_, location);
  }
  
  void eglWindow::ConfineCursorToBounds(const gfx::Rect& bounds) {
  }
- 
-// bool eglWindow::CanDispatchEvent(const ui::PlatformEvent& ne) {
-//   return true;
-// }
-// 
-// uint32_t eglWindow::DispatchEvent(const ui::PlatformEvent& native_event) {
-//   DCHECK(native_event);
-//   Event* event = static_cast<Event*>(native_event);
-//   if (event->IsTouchEvent())
-//     ScaleTouchEvent(static_cast<TouchEvent*>(event), bounds_.size());
-// 
-//   DispatchEventFromNativeUiEvent(
-//       native_event, base::Bind(&PlatformWindowDelegate::DispatchEvent,
-//                                base::Unretained(delegate_)));
-// 
-//   return ui::POST_DISPATCH_STOP_PROPAGATION;
-// }
+
+ bool eglWindow::CanDispatchEvent(const ui::PlatformEvent& ne) {
+   return true;
+ }
+
+ uint32_t eglWindow::DispatchEvent(const ui::PlatformEvent& native_event) {
+   DCHECK(native_event);
+   //Event* event = static_cast<Event*>(native_event);
+   //if (event->IsTouchEvent())
+   //  ScaleTouchEvent(static_cast<TouchEvent*>(event), bounds_.size());
+
+   DispatchEventFromNativeUiEvent(
+       native_event, base::Bind(&PlatformWindowDelegate::DispatchEvent,
+                               base::Unretained(delegate_)));
+
+   return ui::POST_DISPATCH_STOP_PROPAGATION;
+ }
+
  
 }
